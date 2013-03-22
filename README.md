@@ -1,7 +1,8 @@
 census-places-json
 ==================
 
-Simple scripts for fetching Census places data and generating json representations.
+Simple scripts for fetching Census places data and generating json 
+representations.
 
 ### get_lookup_table_files.py ###
 
@@ -14,7 +15,7 @@ type within the state."
 http://www.census.gov/geo/maps-data/data/nlt.html
 
 This script will download all the lookup table zip files available at this
-URL, or can be used to download the file for a single state.
+URL. An optional `-s` argument will limit the download to a single state.
 
 
     >> python download_lookup_table_files.py
@@ -24,7 +25,9 @@ URL, or can be used to download the file for a single state.
 ### make_json.py ###
 
 After running `get_lookup_table_files.py`, you will probably want
-to generate JSON from the extracted data.
+to generate JSON from the extracted data. An optional `-s` argument will limit 
+the export to a single state, and an optional `-g` argument will limit the 
+export to a single geographic type.
 
     >> python make_json.py
     >> python make_json.py -s WA
@@ -33,5 +36,6 @@ to generate JSON from the extracted data.
 
 Each record in the JSON will have two attributes:
 
-- `census_key`: a generated key with all the bits necessary for making a query against this place, e.g. "STATEFP:53|GEOTYPE:INCPLACE|PLACEFP:67000"
+- `census_key`: a generated key with all the bits necessary for making a query 
+against this place, e.g. "STATEFP:53|GEOTYPE:INCPLACE|PLACEFP:67000"
 - `name`: a human-friendly title for the Census place, e.g. "Spokane, Washington"
