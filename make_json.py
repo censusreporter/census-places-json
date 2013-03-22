@@ -88,23 +88,29 @@ def convert_file_contents_to_dicts(file_headers, file_contents, geo_type):
         _item_census_name = line_contents_dict['NAME']
         _item_census_name_description = line_contents_dict['NAMELSAD']
 
+        # create a human-friendly `name` and a `text` value
+        # suitable for autocomplete matching
+        if geo_type in ['CDP', 'INCPLACE']:
+            _item_name = u'%s, %s' % (_item_census_name, _state_name)
+            _item_text = u'%s' % (_item_census_name_description)
+        elif geo_type in ['CD', 'SLDU', 'SLDL', 'VTD']:
+            _item_name = u'%s %s' % (_state_name, _item_census_name_description)
+            _item_text = _item_name
+        elif geo_type in ['SDELM', 'SDSEC', 'SDUNI']:
+            _item_name = u'%s (%s)' % (_item_census_name_description, _state_name)
+            _item_text = u'%s' % (_item_census_name_description)
+        else:
+            _item_name = u'%s' % (_item_census_name_description)
+            _item_text = _item_name
+        _item_data['name'] = _item_name
+        _item_data['text'] = _item_text
+
         # build up our key, suitable for building a query later
-        _item_data['census_key'] = 'STATEFP:%s|GEOTYPE:%s' % (line_contents_dict['STATEFP'], geo_type)
+        _item_data['id'] = 'STATEFP:%s|GEOTYPE:%s' % (line_contents_dict['STATEFP'], geo_type)
         for field in ['DISTRICT', 'COUNTYFP', 'PLACEFP']:
             field_value = line_contents_dict.get(field)
             if field_value:
-                _item_data['census_key'] += '|%s:%s' % (field, field_value)
-
-        # create a human-friendly name
-        if geo_type in ['CDP', 'INCPLACE']:
-            _item_name = u'%s, %s' % (_item_census_name, _state_name)
-        elif geo_type in ['CD', 'SLDU', 'SLDL', 'VTD']:
-            _item_name = u'%s %s' % (_state_name, _item_census_name_description)
-        elif geo_type in ['SDELM', 'SDSEC', 'SDUNI']:
-            _item_name = u'%s (%s)' % (_item_census_name_description, _state_name)
-        else:
-            _item_name = u'%s' % (_item_census_name)
-        _item_data['name'] = _item_name
+                _item_data['id'] += '|%s:%s' % (field, field_value)
 
         return _item_data
 
@@ -126,7 +132,8 @@ def convert_file_contents_to_dicts(file_headers, file_contents, geo_type):
 def write_json(contents_list, state=None, geo_type=None):
     file_name = '%s.json' % ('_').join(filter(None, (state, geo_type, 'places')))
     file_path = '%s/%s' % (JSON_DIR, file_name)
-    json_data = json.dumps(contents_list,
+    json_dict = {'places': contents_list}
+    json_data = json.dumps(json_dict,
         sort_keys=True,
         indent=4,
         separators=(',', ': ')
