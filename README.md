@@ -6,13 +6,12 @@ representations.
 
 ### get_lookup_table_files.py ###
 
-Census.gov says: "The Name Look-up Tables (NLTs) are among the geographic 
+[Census.gov says](http://www.census.gov/geo/maps-data/data/nlt.html): "The Name Look-up Tables (NLTs) are among the geographic 
 products that the Census Bureau provides to states and other data users 
 containing the small area census data necessary for legislative redistricting.
 The NLTs contain the names and codes of every geographic area of the specific 
 type within the state."
 
-http://www.census.gov/geo/maps-data/data/nlt.html
 
 This script will download all the lookup table zip files available at this
 URL. An optional `-s` argument will limit the download to a single state.
