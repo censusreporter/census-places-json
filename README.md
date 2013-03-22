@@ -34,8 +34,17 @@ export to a single geographic type.
     >> python make_json.py -g CDP
     >> python make_json.py -s WA -g CDP
 
-Each record in the JSON will have two attributes:
+Each record in the JSON will have three attributes:
 
-- `census_key`: a generated key with all the bits necessary for making a query 
+- `id`: a generated key with the bits necessary for making a query 
 against this place, e.g. "STATEFP:53|GEOTYPE:INCPLACE|PLACEFP:67000"
 - `name`: a human-friendly title for the Census place, e.g. "Spokane, Washington"
+- `text`: a machine-friendly field suitable for autocomplete matching
+
+
+### examples ###
+
+Two example pages are included, which use the [Select2 widget](http://ivaynberg.github.com/select2/) for autocomplete matching.
+
+- `simple.html`: Open this in your browser, and search for any city in Illinois.
+- `all-places.html`: To try this example, you'll need to run the python scripts in this project to download Census data and generate a `places.json` file, then copy it to the `examples/json` directory.
