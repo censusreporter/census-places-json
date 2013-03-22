@@ -1,6 +1,6 @@
 DOWNLOAD_DIR = 'downloaded_files'
 EXTRACT_DIR = 'extracted_files'
-JSON_DIR = 'json'
+JSON_DIR = 'generated_json'
 
 STATE_FIPS_DICT = {
     '01': {
