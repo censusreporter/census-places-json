@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <title>Autocomplete Census places search: Simple</title>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="select2/select2.js"></script>
+        <link href="select2/select2.css" rel="stylesheet"/>
+        <style>
+            body {font-size: 16px; line-height: 1.5; font-family: "Helvetica Neue", sans-serif;}
+        </style>
+    </head>
+    <body>
+        <article style="margin: 50px auto 0; width: 500px;">
+            <input id="select2-place" style="width: 500px;">
+            <p><strong>To try this example:</strong> Search for a city in Illinois.</p>
+        </article>
+              
+        <script>
+        $(document).ready(function() {
+            var json = (function() {
+                $.ajax({
+                    'async': false,
+                    'global': false,
+                    'url': 'json/IL_INCPLACE_places.json',
+                    'dataType': 'json',
+                    'success': function (data) {
+                        json = data['places'];
+                    }
+                });
+                return json;
+            })();
+
+            function format(item) {
+                return item['name'];
+            };
+
+            $('#select2-place').select2({
+                placeholder: 'Find a place',
+                minimumInputLength: 4,
+                data: json,
+                formatSelection: format,
+                formatResult: format
+            });
+            $('#select2-place').on('change', function(e) {
+                alert(e.val);
+            })
+        });
+        </script>
+    </body>
+</html>
