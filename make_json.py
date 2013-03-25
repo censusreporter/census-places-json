@@ -12,22 +12,24 @@ import json, optparse, os, sys, traceback
 from os.path import isdir
 from __init__ import EXTRACT_DIR, JSON_DIR, STATE_FIPS_DICT
 
-# http://www.census.gov/geo/maps-data/data/nlt_description.html
+# Source: http://www.census.gov/geo/maps-data/data/nlt_description.html
+# Comment out field names that should not be included in data output
 FIELD_DEFINITIONS = {
     'STATEFP': '2-character state FIPS code',
     'DISTRICT': 'variable length code representing the district (i.e., geographic area)',
     'PLACEFP': '5-character place FIPS code',
-    'AIANNHCE': '4-character American Indian / Alaska Native / Native Hawaiian (AIANNH) area census code',
+    #'AIANNHCE': '4-character American Indian / Alaska Native / Native Hawaiian (AIANNH) area census code',
     'COUNTYFP': '3-character county FIPS code',
     'NAME': 'variable length geographic area name (e.g., Atlanta)',
     'NAMELSAD': 'concatenated variable length geographic area name and legal/statistical area description (LSAD) (e.g., Atlanta city)',
 }
 
+# Comment out area types that should not be included in data output
 GEOGRAPHIC_AREA_TYPES = {
     'CD': 'Congressional districts',
     'SLDU': 'State legislative districts - upper',
     'SLDL': 'State legislative districts - lower',
-    'VTD': 'Voting districts',
+    #'VTD': 'Voting districts',
     'SDELM': 'Elementary school districts',
     'SDSEC': 'Secondary school districts',
     'SDUNI': 'Unified school districts',
@@ -36,31 +38,28 @@ GEOGRAPHIC_AREA_TYPES = {
     #'AIANNH': 'American Indian / Alaska Native / Native Hawaiian areas',
 }
 
-# the fields we'll keep
-FIELD_NAME_TRANSFORM_DICT = {
-    'STATEFP': 'fips_code_state',
-    'DISTRICT': 'census_district',
-    'PLACEFP': 'fips_code_place',
-    'COUNTYFP': 'fips_code_county',
-    'NAME': 'census_name',
-    'NAMELSAD': 'census_area_definition',
-}
-
-FIELD_NAME_TRANSFORM_DICT = { 'STATEFP': 'fips_code_state', 'DISTRICT': 'census_district', 'PLACEFP': 'fips_code_place', 'COUNTYFP': 'fips_code_county', 'NAME': 'census_name', 'NAMELSAD': 'census_area_definition',}
-
 def get_filename_list(state=None, geo_type=None):
+    start_check = "NAMES_"
     end_check = '_%s.txt' % geo_type if geo_type else '.txt'
     
     if state:
-        state_check = '_%s_' % state.upper() if state else None
+        state_check = '_%s_' % state.upper()
         filename_list = [
             filename for filename in os.listdir(EXTRACT_DIR) \
-            if state_check in filename and filename.endswith(end_check)
+            # make sure we only get the right set of extracted files
+            if filename.startswith(start_check) and filename.endswith(end_check) \
+            # make sure we only get the geographic areas we want
+            and filename.replace('.txt','').split('_')[-1] in GEOGRAPHIC_AREA_TYPES \
+            # allow for generation of just one state
+            and state_check in filename if state_check
         ]
     else:
         filename_list = [
             filename for filename in os.listdir(EXTRACT_DIR) \
-            if filename.endswith(end_check)
+            # make sure we only get the right set of extracted files
+            if filename.startswith(start_check) and filename.endswith(end_check) \
+            # make sure we only get the geographic areas we want
+            and filename.replace('.txt','').split('_')[-1] in GEOGRAPHIC_AREA_TYPES \
         ]
 
     return filename_list
@@ -73,7 +72,7 @@ def read_filename_list_contents(filename_list):
         with open(os.path.join(EXTRACT_DIR, filename)) as f:
             file_contents = f.readlines()
             file_headers = file_contents.pop(0)
-        
+    
         filename_contents = convert_file_contents_to_dicts(file_headers, file_contents, geo_type)
         filename_list_contents.extend(filename_contents)
     
@@ -120,7 +119,7 @@ def convert_file_contents_to_dicts(file_headers, file_contents, geo_type):
         line_contents = [u'%s' % line.decode('latin-1').strip() for line in line.split('|')]
         line_contents_dict = {}
         for index, header in enumerate(headers):
-            if header in FIELD_NAME_TRANSFORM_DICT:
+            if header in FIELD_DEFINITIONS:
                 line_contents_dict[header] = line_contents[index]
                 
         item_data = _make_item_data(line_contents_dict)
