@@ -41,26 +41,21 @@ GEOGRAPHIC_AREA_TYPES = {
 def get_filename_list(state=None, geo_type=None):
     start_check = "NAMES_"
     end_check = '_%s.txt' % geo_type if geo_type else '.txt'
+
+    filename_list = [
+        filename for filename in os.listdir(EXTRACT_DIR) \
+        # make sure we only get the right set of extracted files
+        if filename.startswith(start_check) and filename.endswith(end_check) \
+        # make sure we only get the geographic areas we want
+        and filename.replace('.txt','').split('_')[-1] in GEOGRAPHIC_AREA_TYPES \
+    ]
     
     if state:
         state_check = '_%s_' % state.upper()
-        filename_list = [
-            filename for filename in os.listdir(EXTRACT_DIR) \
-            # make sure we only get the right set of extracted files
-            if filename.startswith(start_check) and filename.endswith(end_check) \
-            # make sure we only get the geographic areas we want
-            and filename.replace('.txt','').split('_')[-1] in GEOGRAPHIC_AREA_TYPES \
-            # allow for generation of just one state
-            and state_check in filename if state_check
-        ]
-    else:
-        filename_list = [
-            filename for filename in os.listdir(EXTRACT_DIR) \
-            # make sure we only get the right set of extracted files
-            if filename.startswith(start_check) and filename.endswith(end_check) \
-            # make sure we only get the geographic areas we want
-            and filename.replace('.txt','').split('_')[-1] in GEOGRAPHIC_AREA_TYPES \
-        ]
+        filename_list = filter(
+            lambda filename: state_check in filename,
+            filename_list
+        )
 
     return filename_list
 
@@ -82,34 +77,42 @@ def read_filename_list_contents(filename_list):
 def convert_file_contents_to_dicts(file_headers, file_contents, geo_type):
     def _make_item_data(line_contents_dict):
         _item_data = {}
+
+        # get some standard values that our records will need
         _state_name = STATE_FIPS_DICT[line_contents_dict['STATEFP']]['name']
-        _state_abbrev = STATE_FIPS_DICT[line_contents_dict['STATEFP']]['abbreviation']
         _item_census_name = line_contents_dict['NAME']
         _item_census_name_description = line_contents_dict['NAMELSAD']
 
-        # create a human-friendly `name` and a `text` value
-        # suitable for autocomplete matching
+        # all GEOID values begin this way
+        _item_geoid = 'GEOTYPE:%s|GEOID:%s' % (geo_type, line_contents_dict['STATEFP'])
+
+        # create a human-friendly `name`, a `text` value suitable
+        # for autocomplete matching, and finish off our `geoid`
         if geo_type in ['CDP', 'INCPLACE']:
             _item_name = u'%s, %s' % (_item_census_name, _state_name)
             _item_text = u'%s' % (_item_census_name_description)
+            _item_geoid = '%s%s' % (_item_geoid, line_contents_dict['PLACEFP'])
+            
         elif geo_type in ['CD', 'SLDU', 'SLDL', 'VTD']:
             _item_name = u'%s %s' % (_state_name, _item_census_name_description)
             _item_text = _item_name
+            if geo_type == 'VTD':
+                _item_geoid = '%s%s' % (_item_geoid, line_contents_dict['COUNTYFP'], line_contents_dict['DISTRICT'])
+            else:
+                _item_geoid = '%s%s' % (_item_geoid, line_contents_dict['DISTRICT'])
+
         elif geo_type in ['SDELM', 'SDSEC', 'SDUNI']:
             _item_name = u'%s (%s)' % (_item_census_name_description, _state_name)
             _item_text = u'%s' % (_item_census_name_description)
+            _item_geoid = '%s%s' % (_item_geoid, line_contents_dict['DISTRICT'])
+
         else:
             _item_name = u'%s' % (_item_census_name_description)
             _item_text = _item_name
+
         _item_data['name'] = _item_name
         _item_data['text'] = _item_text
-
-        # build up our key, suitable for building a query later
-        _item_data['id'] = 'STATEFP:%s|GEOTYPE:%s' % (line_contents_dict['STATEFP'], geo_type)
-        for field in ['DISTRICT', 'COUNTYFP', 'PLACEFP']:
-            field_value = line_contents_dict.get(field)
-            if field_value:
-                _item_data['id'] += '|%s:%s' % (field, field_value)
+        _item_data['id'] = _item_geoid
 
         return _item_data
 
