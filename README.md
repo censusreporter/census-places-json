@@ -1,8 +1,13 @@
 census-places-json
 ==================
 
-Simple scripts for fetching Census places data and generating json 
-representations.
+Simple scripts for fetching Census places data from Name Look-up Tables
+and generating json representations.
+
+NOTE: This project might still be useful if you want to manipulate 
+data from the Census Name Look-up Tables, but not all geographies
+are represented in those files. You're probably better off looking
+into [census-shapefile-utils](https://github.com/censusreporter/census-shapefile-utils) for extracting data about Census places.
 
 ### get_lookup_table_files.py ###
 
